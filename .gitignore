@@ -1,0 +1,30 @@
+# Maven build output
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Local config with REAL passwords - NEVER push this
+src/main/resources/application-local.yml
+
+# Environment files
+.env
+.env.local
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
