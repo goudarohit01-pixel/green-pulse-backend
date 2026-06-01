@@ -3,28 +3,29 @@ FROM maven:3.9.6-eclipse-temurin-17 AS build
 
 WORKDIR /app
 
-# Copy pom.xml first for dependency caching
+# Copy pom.xml and download dependencies first (cached layer)
 COPY pom.xml .
+RUN mvn dependency:resolve -B
 
-# Download dependencies
-RUN mvn dependency:go-offline -B
-
-# Copy source code
+# Copy source and build
 COPY src ./src
-
-# Build the jar
-RUN mvn clean package -DskipTests
+RUN mvn clean package -DskipTests -q
 
 # ── Stage 2: Run ────────────────────────────────────────────
 FROM eclipse-temurin:17-jre-alpine
 
 WORKDIR /app
 
-# Copy jar from build stage
-COPY --from=build /app/target/green-pulse-backend-1.0.0.jar app.jar
+# Copy jar
+COPY --from=build /app/target/*.jar app.jar
 
-# Expose port
 EXPOSE 8080
 
-# Run
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Optimized JVM flags for faster startup and less memory
+ENTRYPOINT ["sh", "-c", "java \
+  -XX:+UseSerialGC \
+  -XX:MaxRAM=512m \
+  -XX:TieredStopAtLevel=1 \
+  -Djava.security.egd=file:/dev/./urandom \
+  -jar app.jar \
+  --server.port=${PORT:-8080}"]
